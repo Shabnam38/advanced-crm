@@ -2,9 +2,10 @@ from django.test import TestCase
 from leads.models import Lead
 from .models import Interaction
 
+
 class InteractionModelTests(TestCase):
     def test_create_interaction(self):
-        lead = Lead.objects.create(full_name="Test Lead")
+        lead = Lead.objects.create(full_name="Test Lead", email="test@example.com")
         interaction = Interaction.objects.create(
             lead=lead,
             interaction_type='call',

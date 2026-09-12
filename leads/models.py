@@ -1,6 +1,7 @@
 from django.db import models
 from django.core.exceptions import ValidationError
 
+
 class Lead(models.Model):
     STATUS_CHOICES = [
         ('new', 'New'),
@@ -40,6 +41,9 @@ class Lead(models.Model):
     def clean(self):
         if self.phone and not self.phone.replace('+', '').replace('-', '').replace(' ', '').isdigit():
             raise ValidationError({'phone': 'Phone number should only contain digits, spaces, "+" or "-".'})
+
+        if not self.email and not self.phone:
+            raise ValidationError('A lead must have at least an email or a phone number.')
 
     def save(self, *args, **kwargs):
         self.score = self.STATUS_SCORE.get(self.status, self.score)
