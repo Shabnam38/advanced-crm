@@ -38,11 +38,15 @@ def company_detail(request, pk):
     }
     return JsonResponse(data)
 
-
 def customer_list(request):
-    customers = Customer.objects.all().values('id', 'first_name', 'last_name', 'email', 'company_id')
-    return JsonResponse(list(customers), safe=False)
+    customers = Customer.objects.all()
 
+    company_id = request.GET.get('company_id')
+    if company_id:
+        customers = customers.filter(company_id=company_id)
+
+    customers = customers.values('id', 'first_name', 'last_name', 'email', 'company_id')
+    return JsonResponse(list(customers), safe=False)
 
 def customer_detail(request, pk):
     customer = get_object_or_404(Customer, pk=pk)
@@ -114,12 +118,19 @@ def deal_detail(request, pk):
     }
     return JsonResponse(data)
 
-
 def task_list(request):
-    tasks = Task.objects.all().values('id', 'title', 'due_date', 'priority', 'is_completed')
+    tasks = Task.objects.all()
+
+    priority = request.GET.get('priority')
+    if priority:
+        tasks = tasks.filter(priority=priority)
+
+    is_completed = request.GET.get('is_completed')
+    if is_completed is not None:
+        tasks = tasks.filter(is_completed=is_completed.lower() == 'true')
+
+    tasks = tasks.values('id', 'title', 'due_date', 'priority', 'is_completed')
     return JsonResponse(list(tasks), safe=False)
-
-
 def task_detail(request, pk):
     task = get_object_or_404(Task, pk=pk)
     data = {
@@ -132,12 +143,15 @@ def task_detail(request, pk):
     }
     return JsonResponse(data)
 
-
 def interaction_list(request):
-    interactions = Interaction.objects.all().values('id', 'interaction_type', 'date')
+    interactions = Interaction.objects.all()
+
+    interaction_type = request.GET.get('type')
+    if interaction_type:
+        interactions = interactions.filter(interaction_type=interaction_type)
+
+    interactions = interactions.values('id', 'interaction_type', 'date')
     return JsonResponse(list(interactions), safe=False)
-
-
 def interaction_detail(request, pk):
     interaction = get_object_or_404(Interaction, pk=pk)
     data = {
