@@ -2,6 +2,7 @@ from django.db import models
 from leads.models import Lead
 from deals.models import Deal
 
+
 class Task(models.Model):
     PRIORITY_CHOICES = [
         ('low', 'Low'),
@@ -20,6 +21,7 @@ class Task(models.Model):
 
     class Meta:
         verbose_name_plural = "Tasks"
+        ordering = ['due_date']
 
     def __str__(self):
         return self.title

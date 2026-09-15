@@ -37,6 +37,7 @@ class Lead(models.Model):
 
     class Meta:
         verbose_name_plural = "Leads"
+        ordering = ['-created_at']
 
     def clean(self):
         if self.phone and not self.phone.replace('+', '').replace('-', '').replace(' ', '').isdigit():

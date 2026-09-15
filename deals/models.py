@@ -3,6 +3,7 @@ from django.core.exceptions import ValidationError
 from companies.models import Company
 from customers.models import Customer
 
+
 class Deal(models.Model):
     STAGE_CHOICES = [
         ('prospecting', 'Prospecting'),
@@ -31,6 +32,7 @@ class Deal(models.Model):
 
     class Meta:
         verbose_name_plural = "Deals"
+        ordering = ['-created_at']
 
     def clean(self):
         if self.value < 0:
