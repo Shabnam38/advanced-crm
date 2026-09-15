@@ -1,6 +1,7 @@
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from django.db.models import Sum, Count, Avg
+from django.core.paginator import Paginator
 from companies.models import Company
 from customers.models import Customer
 from leads.models import Lead
@@ -21,9 +22,21 @@ def dashboard_summary(request):
     return JsonResponse(data)
 
 
+def paginate(request, queryset):
+    page_number = request.GET.get('page', 1)
+    paginator = Paginator(queryset, 10)
+    page = paginator.get_page(page_number)
+    return {
+        'count': paginator.count,
+        'num_pages': paginator.num_pages,
+        'current_page': page.number,
+        'results': list(page),
+    }
+
+
 def company_list(request):
     companies = Company.objects.all().values('id', 'name', 'industry', 'phone')
-    return JsonResponse(list(companies), safe=False)
+    return JsonResponse(paginate(request, companies))
 
 
 def company_detail(request, pk):
@@ -38,15 +51,15 @@ def company_detail(request, pk):
     }
     return JsonResponse(data)
 
+
 def customer_list(request):
     customers = Customer.objects.all()
-
     company_id = request.GET.get('company_id')
     if company_id:
         customers = customers.filter(company_id=company_id)
-
     customers = customers.values('id', 'first_name', 'last_name', 'email', 'company_id')
-    return JsonResponse(list(customers), safe=False)
+    return JsonResponse(paginate(request, customers))
+
 
 def customer_detail(request, pk):
     customer = get_object_or_404(Customer, pk=pk)
@@ -64,17 +77,14 @@ def customer_detail(request, pk):
 
 def lead_list(request):
     leads = Lead.objects.all()
-
     status = request.GET.get('status')
     if status:
         leads = leads.filter(status=status)
-
     source = request.GET.get('source')
     if source:
         leads = leads.filter(source=source)
-
     leads = leads.values('id', 'full_name', 'status', 'score', 'source')
-    return JsonResponse(list(leads), safe=False)
+    return JsonResponse(paginate(request, leads))
 
 
 def lead_detail(request, pk):
@@ -95,13 +105,11 @@ def lead_detail(request, pk):
 
 def deal_list(request):
     deals = Deal.objects.all()
-
     stage = request.GET.get('stage')
     if stage:
         deals = deals.filter(stage=stage)
-
     deals = deals.values('id', 'title', 'value', 'stage', 'probability')
-    return JsonResponse(list(deals), safe=False)
+    return JsonResponse(paginate(request, deals))
 
 
 def deal_detail(request, pk):
@@ -118,19 +126,19 @@ def deal_detail(request, pk):
     }
     return JsonResponse(data)
 
+
 def task_list(request):
     tasks = Task.objects.all()
-
     priority = request.GET.get('priority')
     if priority:
         tasks = tasks.filter(priority=priority)
-
     is_completed = request.GET.get('is_completed')
     if is_completed is not None:
         tasks = tasks.filter(is_completed=is_completed.lower() == 'true')
-
     tasks = tasks.values('id', 'title', 'due_date', 'priority', 'is_completed')
-    return JsonResponse(list(tasks), safe=False)
+    return JsonResponse(paginate(request, tasks))
+
+
 def task_detail(request, pk):
     task = get_object_or_404(Task, pk=pk)
     data = {
@@ -143,15 +151,16 @@ def task_detail(request, pk):
     }
     return JsonResponse(data)
 
+
 def interaction_list(request):
     interactions = Interaction.objects.all()
-
     interaction_type = request.GET.get('type')
     if interaction_type:
         interactions = interactions.filter(interaction_type=interaction_type)
-
     interactions = interactions.values('id', 'interaction_type', 'date')
-    return JsonResponse(list(interactions), safe=False)
+    return JsonResponse(paginate(request, interactions))
+
+
 def interaction_detail(request, pk):
     interaction = get_object_or_404(Interaction, pk=pk)
     data = {
@@ -167,13 +176,11 @@ def interaction_detail(request, pk):
 
 def company_stats(request, pk):
     company = get_object_or_404(Company, pk=pk)
-
     deal_stats = company.deals.aggregate(
         total_value=Sum('value'),
         deal_count=Count('id'),
         avg_probability=Avg('probability'),
     )
-
     data = {
         'company': company.name,
         'total_deal_value': str(deal_stats['total_value'] or 0),
